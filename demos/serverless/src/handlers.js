@@ -93,6 +93,27 @@ exports.join = async(event, context) => {
   }, null, 2));
 };
 
+exports.attendee = async (event, context) => {
+  const query = event.queryStringParameters;
+  if (!query.title || !query.attendee) {
+    return response(400, 'application/json', JSON.stringify({error: 'Need parameters: title, attendee'}));
+  }
+  console.info('Getting new attendee');
+
+  let meeting = await getMeeting(query.title);
+
+  const attendee = (await chime.getAttendee({
+    MeetingId: meeting.Meeting.MeetingId,
+    AttendeeId: query.attendee
+  }).promise());
+
+  return response(200, 'application/json', JSON.stringify({
+    AttendeeInfo: {
+      Name: attendee.Attendee.ExternalUserId,
+    },
+  }, null, 2));
+}
+
 exports.end = async (event, context) => {
   // Fetch the meeting by title
   const meeting = await getMeeting(event.queryStringParameters.title);
@@ -269,7 +290,12 @@ function createLogStreamName(meetingId, attendeeId) {
 function response(statusCode, contentType, body) {
   return {
     statusCode: statusCode,
-    headers: { 'Content-Type': contentType },
+    headers: {
+      'Content-Type': contentType,
+      "Access-Control-Allow-Headers" : "Content-Type",
+      "Access-Control-Allow-Origin": '*',
+      "Access-Control-Allow-Methods": "OPTIONS,POST,GET,PUT"
+    },
     body: body,
     isBase64Encoded: false
   };

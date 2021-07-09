@@ -50,6 +50,7 @@ Resources:
       Roles:
         - Ref: ChimeSdkJoinLambdaRole
         - Ref: ChimeSdkEndLambdaRole
+        - Ref: ChimeSdkAttendeeLambdaRole
   ChimeMessagingAccessPolicy:
     Type: AWS::IAM::Policy
     Properties:
@@ -163,6 +164,20 @@ Resources:
           Properties:
             Path: /join
             Method: POST
+  ChimeSdkAttendeeLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: handlers.attendee
+      CodeUri: src/
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref Meetings
+      Events:
+        Api1:
+          Type: Api
+          Properties:
+            Path: /attendee
+            Method: GET
   ChimeSdkEndLambda:
     Type: AWS::Serverless::Function
     Properties:
